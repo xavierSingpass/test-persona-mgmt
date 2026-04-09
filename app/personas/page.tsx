@@ -26,8 +26,8 @@ export default function PersonasPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Test Personas</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Test Personas</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {filtered.length} of {mockPersonas.length} personas
           </p>
         </div>
@@ -40,18 +40,18 @@ export default function PersonasPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 flex flex-wrap gap-3">
         <input
           type="text"
           placeholder="Search NRIC, name, or owner..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 min-w-[200px] px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
         />
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value as PersonaType | "all")}
-          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="all">All Types</option>
           {Object.entries(PERSONA_TYPE_LABELS).map(([value, label]) => (
@@ -61,7 +61,7 @@ export default function PersonasPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as PersonaStatus | "all")}
-          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="all">All Statuses</option>
           <option value="active">Active</option>
@@ -73,43 +73,43 @@ export default function PersonasPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+              <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Persona
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Type
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Systems
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Owner
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Expires
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide">
                   Environment
                 </th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {filtered.map((persona) => (
-                <tr key={persona.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={persona.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-mono text-xs text-gray-500">{persona.nric}</div>
-                    <div className="font-medium text-gray-900 mt-0.5">{persona.name}</div>
+                    <div className="font-mono text-xs text-gray-500 dark:text-gray-400">{persona.nric}</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-100 mt-0.5">{persona.name}</div>
                     {persona.entityName && (
-                      <div className="text-xs text-gray-400 mt-0.5">{persona.entityName}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{persona.entityName}</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -126,8 +126,8 @@ export default function PersonasPage() {
                       <SystemBadge name="MIB" active={persona.systems.mib} />
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600">{persona.owner}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600">
+                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{persona.owner}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
                     {new Date(persona.expiresAt).toLocaleDateString("en-SG", {
                       day: "numeric",
                       month: "short",
@@ -138,8 +138,8 @@ export default function PersonasPage() {
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         persona.environment === "staging"
-                          ? "bg-indigo-100 text-indigo-700"
-                          : "bg-purple-100 text-purple-700"
+                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                          : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
                       }`}
                     >
                       {persona.environment}
@@ -148,7 +148,7 @@ export default function PersonasPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/personas/${persona.id}`}
-                      className="text-xs text-blue-600 hover:underline font-medium"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
                     >
                       View →
                     </Link>
@@ -157,7 +157,7 @@ export default function PersonasPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
                     No personas match your filters.
                   </td>
                 </tr>
@@ -168,8 +168,8 @@ export default function PersonasPage() {
       </div>
 
       {/* Persona Type Legend */}
-      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      <div className="mt-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
           Persona Type Reference
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -181,15 +181,15 @@ export default function PersonasPage() {
             { type: "partner_configured", ownership: "Partner / Orchestration", modification: "RP controlled (guardrailed)", involvement: "High" },
             { type: "business_entity", ownership: "Singpass / Corppass / PX", modification: "Internal teams only", involvement: "Minimal" },
           ].map(({ type, ownership, modification, involvement }) => (
-            <div key={type} className="flex flex-col gap-1.5 p-3 rounded-lg border border-gray-100">
+            <div key={type} className="flex flex-col gap-1.5 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
               <TypeBadge type={type as PersonaType} />
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-medium">Owner:</span> {ownership}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-medium">Modification:</span> {modification}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-medium">RP Involvement:</span> {involvement}
               </div>
             </div>
