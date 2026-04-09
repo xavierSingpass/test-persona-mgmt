@@ -1,0 +1,201 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { StatusBadge, TypeBadge, SystemBadge } from "@/components/StatusBadge";
+import { mockPersonas } from "@/lib/mock-data";
+import { PersonaType, PersonaStatus, PERSONA_TYPE_LABELS } from "@/lib/types";
+
+export default function PersonasPage() {
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<PersonaType | "all">("all");
+  const [filterStatus, setFilterStatus] = useState<PersonaStatus | "all">("all");
+
+  const filtered = mockPersonas.filter((p) => {
+    const matchSearch =
+      !search ||
+      p.nric.toLowerCase().includes(search.toLowerCase()) ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.owner.toLowerCase().includes(search.toLowerCase());
+    const matchType = filterType === "all" || p.type === filterType;
+    const matchStatus = filterStatus === "all" || p.status === filterStatus;
+    return matchSearch && matchType && matchStatus;
+  });
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Test Personas</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {filtered.length} of {mockPersonas.length} personas
+          </p>
+        </div>
+        <Link
+          href="/personas/create"
+          className="px-4 py-2 bg-[#1a3a6b] text-white text-sm font-medium rounded-lg hover:bg-blue-800 transition-colors"
+        >
+          + New Persona
+        </Link>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
+        <input
+          type="text"
+          placeholder="Search NRIC, name, or owner..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 min-w-[200px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as PersonaType | "all")}
+          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        >
+          <option value="all">All Types</option>
+          {Object.entries(PERSONA_TYPE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as PersonaStatus | "all")}
+          className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        >
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="expiring">Expiring</option>
+          <option value="provisioning">Provisioning</option>
+          <option value="expired">Expired</option>
+          <option value="decommissioned">Decommissioned</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Persona
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Type
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Status
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Systems
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Owner
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Expires
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                  Environment
+                </th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.map((persona) => (
+                <tr key={persona.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="font-mono text-xs text-gray-500">{persona.nric}</div>
+                    <div className="font-medium text-gray-900 mt-0.5">{persona.name}</div>
+                    {persona.entityName && (
+                      <div className="text-xs text-gray-400 mt-0.5">{persona.entityName}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <TypeBadge type={persona.type} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={persona.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      <SystemBadge name="SP" active={persona.systems.singpass} />
+                      <SystemBadge name="MI" active={persona.systems.myinfo} />
+                      <SystemBadge name="CP" active={persona.systems.corppass} />
+                      <SystemBadge name="MIB" active={persona.systems.mib} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-600">{persona.owner}</td>
+                  <td className="px-4 py-3 text-xs text-gray-600">
+                    {new Date(persona.expiresAt).toLocaleDateString("en-SG", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        persona.environment === "staging"
+                          ? "bg-indigo-100 text-indigo-700"
+                          : "bg-purple-100 text-purple-700"
+                      }`}
+                    >
+                      {persona.environment}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/personas/${persona.id}`}
+                      className="text-xs text-blue-600 hover:underline font-medium"
+                    >
+                      View →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">
+                    No personas match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Persona Type Legend */}
+      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Persona Type Reference
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[
+            { type: "partner_integration", ownership: "Partner / PX", modification: "RP limited fields", involvement: "High" },
+            { type: "synthetic_reliability", ownership: "Singpass / Automation", modification: "Automated only", involvement: "None" },
+            { type: "synthetic_monitoring", ownership: "Agencies / Singpass", modification: "No direct modification", involvement: "Minimal" },
+            { type: "security_testing", ownership: "Singpass / CSG", modification: "Internal only", involvement: "None" },
+            { type: "partner_configured", ownership: "Partner / Orchestration", modification: "RP controlled (guardrailed)", involvement: "High" },
+            { type: "business_entity", ownership: "Singpass / Corppass / PX", modification: "Internal teams only", involvement: "Minimal" },
+          ].map(({ type, ownership, modification, involvement }) => (
+            <div key={type} className="flex flex-col gap-1.5 p-3 rounded-lg border border-gray-100">
+              <TypeBadge type={type as PersonaType} />
+              <div className="text-xs text-gray-500">
+                <span className="font-medium">Owner:</span> {ownership}
+              </div>
+              <div className="text-xs text-gray-500">
+                <span className="font-medium">Modification:</span> {modification}
+              </div>
+              <div className="text-xs text-gray-500">
+                <span className="font-medium">RP Involvement:</span> {involvement}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
