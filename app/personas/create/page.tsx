@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { PersonaType, PERSONA_TYPE_LABELS } from "@/lib/types";
+import Image from "next/image";
 
 const steps = ["Persona Type", "Identity Details", "System Configuration", "Review & Submit"];
 
@@ -18,7 +19,6 @@ interface FormData {
   mobile: string;
   owner: string;
   environment: string;
-  tags: string;
   withSingpass: boolean;
   withMyinfo: boolean;
   withCorppass: boolean;
@@ -40,7 +40,6 @@ const initialForm: FormData = {
   mobile: "",
   owner: "",
   environment: "staging",
-  tags: "",
   withSingpass: true,
   withMyinfo: false,
   withCorppass: false,
@@ -86,9 +85,21 @@ export default function CreatePersonaPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initialForm);
   const [submitted, setSubmitted] = useState(false);
+  const [bioPhotoPreview, setBioPhotoPreview] = useState<string>("");
+  const [bioPhotoName, setBioPhotoName] = useState<string>("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = (key: keyof FormData, value: string | boolean) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const handlePhotoFile = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    setBioPhotoName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => setBioPhotoPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const canProceed = () => {
     if (step === 0) return !!form.type;
@@ -215,11 +226,7 @@ export default function CreatePersonaPage() {
               </div>
               <div>
                 <label className={labelClass}>Sex</label>
-                <select
-                  value={form.sex}
-                  onChange={(e) => update("sex", e.target.value)}
-                  className={selectClass}
-                >
+                <select value={form.sex} onChange={(e) => update("sex", e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   <option>M</option>
                   <option>F</option>
@@ -227,11 +234,7 @@ export default function CreatePersonaPage() {
               </div>
               <div>
                 <label className={labelClass}>Race</label>
-                <select
-                  value={form.race}
-                  onChange={(e) => update("race", e.target.value)}
-                  className={selectClass}
-                >
+                <select value={form.race} onChange={(e) => update("race", e.target.value)} className={selectClass}>
                   <option value="">Select</option>
                   <option>Chinese</option>
                   <option>Malay</option>
@@ -242,11 +245,7 @@ export default function CreatePersonaPage() {
               </div>
               <div>
                 <label className={labelClass}>Nationality</label>
-                <select
-                  value={form.nationality}
-                  onChange={(e) => update("nationality", e.target.value)}
-                  className={selectClass}
-                >
+                <select value={form.nationality} onChange={(e) => update("nationality", e.target.value)} className={selectClass}>
                   <option>Singapore Citizen</option>
                   <option>Singapore PR</option>
                   <option>Foreign National</option>
@@ -291,15 +290,69 @@ export default function CreatePersonaPage() {
                   className={inputClass}
                 />
               </div>
+
+              {/* Bio Photo Upload */}
               <div className="md:col-span-2">
-                <label className={labelClass}>Tags (comma-separated)</label>
+                <label className={labelClass}>Bio Photo (optional)</label>
                 <input
-                  type="text"
-                  value={form.tags}
-                  onChange={(e) => update("tags", e.target.value)}
-                  placeholder="myinfo-v4, corppass-admin, gbbp"
-                  className={inputClass}
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handlePhotoFile(file);
+                  }}
                 />
+                {bioPhotoPreview ? (
+                  <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-600">
+                      <Image src={bioPhotoPreview} alt="Bio photo preview" fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{bioPhotoName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Photo uploaded successfully</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBioPhotoPreview("");
+                        setBioPhotoName("");
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex-shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOver(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handlePhotoFile(file);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
+                      dragOver
+                        ? "border-[#1a3a6b] bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-800"
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-xl">
+                      📷
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">PNG, JPG, JPEG up to 5MB</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -397,18 +450,31 @@ export default function CreatePersonaPage() {
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Review & Submit</h2>
             <div className="space-y-4">
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Persona</div>
-                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Type</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{form.type ? PERSONA_TYPE_LABELS[form.type] : "—"}</span>
-                  <span className="text-gray-500 dark:text-gray-400">Name</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{form.name || "—"}</span>
-                  <span className="text-gray-500 dark:text-gray-400">NRIC</span>
-                  <span className="font-mono font-medium text-gray-900 dark:text-gray-100">{form.nric || "—"}</span>
-                  <span className="text-gray-500 dark:text-gray-400">Owner</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{form.owner || "—"}</span>
-                  <span className="text-gray-500 dark:text-gray-400">Environment</span>
-                  <span className="font-medium capitalize text-gray-900 dark:text-gray-100">{form.environment}</span>
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Persona</div>
+                <div className="flex items-start gap-4">
+                  {bioPhotoPreview && (
+                    <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-600">
+                      <Image src={bioPhotoPreview} alt="Bio photo" fill className="object-cover" />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-y-2 text-sm flex-1">
+                    <span className="text-gray-500 dark:text-gray-400">Type</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{form.type ? PERSONA_TYPE_LABELS[form.type] : "—"}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Name</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{form.name || "—"}</span>
+                    <span className="text-gray-500 dark:text-gray-400">NRIC</span>
+                    <span className="font-mono font-medium text-gray-900 dark:text-gray-100">{form.nric || "—"}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Owner</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{form.owner || "—"}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Environment</span>
+                    <span className="font-medium capitalize text-gray-900 dark:text-gray-100">{form.environment}</span>
+                    {bioPhotoPreview && (
+                      <>
+                        <span className="text-gray-500 dark:text-gray-400">Bio Photo</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 truncate">{bioPhotoName}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
