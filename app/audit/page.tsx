@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockAuditLogs } from "@/lib/mock-data";
+import { mockAuditLogs, mockPersonas } from "@/lib/mock-data";
+import { useProfile } from "@/lib/profile-context";
 
 const ACTION_COLORS: Record<string, string> = {
   create: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
@@ -24,8 +25,18 @@ export default function AuditPage() {
   const [filterAction, setFilterAction] = useState("all");
   const [filterSystem, setFilterSystem] = useState("all");
   const [search, setSearch] = useState("");
+  const { config } = useProfile();
 
-  const filtered = mockAuditLogs.filter((log) => {
+  // Profile-scoped persona IDs
+  const profilePersonaIds = config.ownerFilter
+    ? new Set(mockPersonas.filter((p) => p.owner === config.ownerFilter).map((p) => p.id))
+    : null;
+
+  const allScopedLogs = profilePersonaIds
+    ? mockAuditLogs.filter((log) => profilePersonaIds.has(log.personaId))
+    : mockAuditLogs;
+
+  const filtered = allScopedLogs.filter((log) => {
     const matchAction = filterAction === "all" || log.action === filterAction;
     const matchSystem = filterSystem === "all" || log.systems.includes(filterSystem as never);
     const matchSearch =
@@ -36,11 +47,8 @@ export default function AuditPage() {
     return matchAction && matchSystem && matchSearch;
   });
 
-  const actionCounts = mockAuditLogs.reduce(
-    (acc, log) => {
-      acc[log.action] = (acc[log.action] || 0) + 1;
-      return acc;
-    },
+  const actionCounts = allScopedLogs.reduce(
+    (acc, log) => { acc[log.action] = (acc[log.action] || 0) + 1; return acc; },
     {} as Record<string, number>
   );
 
@@ -49,8 +57,16 @@ export default function AuditPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Audit Log</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Full audit trail of all persona lifecycle actions — immutable, tamper-evident records.
+          {config.ownerFilter
+            ? `Audit trail for ${config.agencyName} personas — immutable, tamper-evident records.`
+            : "Full audit trail of all persona lifecycle actions — immutable, tamper-evident records."}
         </p>
+        {config.ownerFilter && (
+          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-medium">
+            <span>🏢</span>
+            <span>Showing {config.agencyName} logs only</span>
+          </div>
+        )}
       </div>
 
       {/* Action summary */}
@@ -130,10 +146,7 @@ export default function AuditPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Link
-                          href={`/personas/${log.personaId}`}
-                          className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                        >
+                        <Link href={`/personas/${log.personaId}`} className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                           {log.personaNric}
                         </Link>
                         <span className="text-xs text-gray-400 dark:text-gray-500">by</span>
@@ -145,10 +158,7 @@ export default function AuditPage() {
                         {log.systems.length > 0 && (
                           <div className="flex gap-1">
                             {log.systems.map((s) => (
-                              <span
-                                key={s}
-                                className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${SYSTEM_COLORS[s] || "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"}`}
-                              >
+                              <span key={s} className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${SYSTEM_COLORS[s] || "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"}`}>
                                 {s}
                               </span>
                             ))}
@@ -160,17 +170,10 @@ export default function AuditPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      {new Date(log.timestamp).toLocaleDateString("en-SG", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {new Date(log.timestamp).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                      {new Date(log.timestamp).toLocaleTimeString("en-SG", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {new Date(log.timestamp).toLocaleTimeString("en-SG", { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
                 </div>

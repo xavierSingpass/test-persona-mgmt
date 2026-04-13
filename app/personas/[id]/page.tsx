@@ -5,6 +5,7 @@ import Link from "next/link";
 import { StatusBadge, TypeBadge, SystemBadge } from "@/components/StatusBadge";
 import { mockPersonas, mockAuditLogs } from "@/lib/mock-data";
 import { PERSONA_TYPE_LABELS } from "@/lib/types";
+import { useProfile } from "@/lib/profile-context";
 
 export default function PersonaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -12,6 +13,7 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
   const logs = mockAuditLogs.filter((l) => l.personaId === id);
   const [activeTab, setActiveTab] = useState<"overview" | "attributes" | "audit">("overview");
   const [showDecommission, setShowDecommission] = useState(false);
+  const { config } = useProfile();
 
   if (!persona) {
     return (
@@ -20,6 +22,22 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Persona not found</h2>
         <Link href="/personas" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
           ← Back to personas
+        </Link>
+      </div>
+    );
+  }
+
+  // Access guard for agency profiles
+  if (config.ownerFilter && persona.owner !== config.ownerFilter) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <div className="text-4xl mb-4">🔒</div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Access Restricted</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+          This persona belongs to another team. As <strong>{config.label}</strong>, you can only view your own team&apos;s personas.
+        </p>
+        <Link href="/personas" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
+          ← Back to your personas
         </Link>
       </div>
     );
@@ -73,12 +91,14 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
             <button className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               Edit
             </button>
-            <button
-              onClick={() => setShowDecommission(true)}
-              className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            >
-              Decommission
-            </button>
+            {!config.ownerFilter && (
+              <button
+                onClick={() => setShowDecommission(true)}
+                className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                Decommission
+              </button>
+            )}
           </div>
         </div>
 
@@ -160,7 +180,7 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
                 const past = arr.indexOf(persona.lifecycleStage) > i;
                 return (
                   <div key={stage} className="flex items-center gap-2">
-                    <div className={`flex flex-col items-center`}>
+                    <div className="flex flex-col items-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                         current ? "bg-[#1a3a6b] text-white" : past ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
                       }`}>
@@ -183,18 +203,9 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Persona Type Details</h3>
               <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Type: </span>
-                  {PERSONA_TYPE_LABELS[persona.type]}
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Modification Rights: </span>
-                  <span className="capitalize">{persona.modificationRights}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Created By: </span>
-                  {persona.createdBy}
-                </div>
+                <div><span className="font-medium text-gray-700 dark:text-gray-300">Type: </span>{PERSONA_TYPE_LABELS[persona.type]}</div>
+                <div><span className="font-medium text-gray-700 dark:text-gray-300">Modification Rights: </span><span className="capitalize">{persona.modificationRights}</span></div>
+                <div><span className="font-medium text-gray-700 dark:text-gray-300">Created By: </span>{persona.createdBy}</div>
                 <div>
                   <span className="font-medium text-gray-700 dark:text-gray-300">Last Modified: </span>
                   {new Date(persona.lastModified).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -217,7 +228,7 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
                   <span className="text-green-500">✅</span>
                   <span className="text-gray-600 dark:text-gray-400">Audit logging active</span>
                 </div>
-                <div className={`flex items-center gap-2 text-xs`}>
+                <div className="flex items-center gap-2 text-xs">
                   <span className={daysUntilExpiry <= 14 ? "text-yellow-500" : "text-green-500"}>
                     {daysUntilExpiry <= 14 ? "⚠️" : "✅"}
                   </span>
@@ -294,9 +305,7 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
                         <span className="text-xs text-gray-500 dark:text-gray-400">{log.actor}</span>
                         <span className="text-xs text-gray-400 dark:text-gray-500">({log.actorRole})</span>
                       </div>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(log.timestamp).toLocaleString("en-SG")}
-                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{new Date(log.timestamp).toLocaleString("en-SG")}</span>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{log.details}</p>
                     <div className="flex items-center gap-3 mt-1.5">
@@ -321,7 +330,7 @@ export default function PersonaDetailPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {/* Decommission Modal */}
+      {/* Decommission Modal — Singpass PX Ops only */}
       {showDecommission && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
